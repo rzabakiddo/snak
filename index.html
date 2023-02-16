@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<title>snak</title>
+<head>
+    <style>
+        h1,h5 {
+            text-align: center;
+            font-family: 'Arial';
+            color: #333;
+        }
+		input {
+			margin-left: 50%;
+			transform: translate(-50%,0%);
+		}
+        body {
+            background-color: #99e;
+        }
+        
+        #game {
+            position: absolute;
+            left: calc(50% - 250px);
+            border: 5px #808 solid;
+        }
+    </style>
+    <script>
+        function randomInt(range) {
+    return Math.floor(Math.random() * range + 1);
+}
+
+function initGame() {
+    apoints = 2;
+    let x = randomInt(mapSize - 2);
+    let y = randomInt(mapSize - 2);
+    if (x < 0)
+        x = 0;
+    if (y < 0)
+        y = 0;
+    appleCoord = [1 + x, 1 + y];
+    clearMap();
+    gameLoop();
+}
+function checkb() {
+autoplay=document.getElementById("apl").checked;
+}
+var autoplay=false;
+function gameLoop() {
+    setTimeout(function() {
+        ticks++;
+		if(autoplay) {
+		let change=-1;
+			if(appleCoord[0]>head[0]) {
+				dir = 0;
+				change=0;
+			}else if(appleCoord[0]<head[0]) {
+				dir = 1;change=1;
+			}
+			if(appleCoord[0]==head[0]) {
+				if(appleCoord[1]>head[1]){
+					dir=3;change=3;
+				}else if(appleCoord[1]!=head[1]){
+					dir=2;change=2;}
+			}
+			var illegalMoved=false;
+			if(lastDir==0&&dir==1||lastDir==1&&dir==0||lastDir==2&&dir==3||lastDir==3&&dir==2) {
+				if(change!=-1) {
+					if(change==1||change==0) {
+						dir=3;
+					}else {
+						dir=0;
+					}
+				}
+			}
+		}
+        if (ticks % moveTick == 0){
+            lastDir = dir;
+            //0 >
+            //1 <
+            //2 /\
+            //3 \/
+            let xp = 0;
+            let yp = 0;
+            switch (dir) {
+                case 0:
+                    xp = 1;
+                    break;
+                case 1:
+                    xp = -1;
+                    break;
+                case 2:
+                    yp = -1;
+                    break;
+                case 3:
+                    yp = 1;
+            }
+            tail.push([head[0], head[1]]);
+
+            if (tail.length > apoints)
+                tail.splice(0, 1);
+            head[0] += xp;
+            head[1] += yp;
+            let size = tail.length;
+            while (size > 0) {
+                size--;
+                let clo = tail[size];
+                if (clo[0] == head[0] && clo[1] == head[1]) {
+                    location.reload();
+                }
+            }
+            if (head[0] > mapSize - 1) {
+                head[0] = 0;
+            }
+            if (head[0] < 0) {
+                head[0] = mapSize;
+            }
+            if (head[1] > mapSize - 1) {
+                head[1] = 0;
+            }
+            if (head[1] < 0) {
+                head[1] = mapSize;
+            }
+            if (head[0] == appleCoord[0] && head[1] == appleCoord[1]) {
+                apoints++;
+                let x = randomInt(mapSize - 2);
+                let y = randomInt(mapSize - 2);
+                if (x < 0)
+                    x = 0;
+                if (y < 0)
+                    y = 0;
+                appleCoord = [1 + x, 1 + y];
+            }
+        }
+        doDraw();
+         gameLoop();
+    }, 50)
+}
+
+function clearMap() {
+    let canvObj = document.getElementById("game");
+    let cx2d = canvObj.getContext("2d");
+    cx2d.fillStyle = "#000000";
+    cx2d.fillRect(0, 0, 500, 500);
+}
+
+function doDraw() {
+    clearMap();
+    document.getElementById("points").innerText = ("Punkty: " + apoints);
+    let canvObj = document.getElementById("game");
+    let cx2d = canvObj.getContext("2d");
+    cx2d.fillStyle = "#ff0000";
+    let pixelSize = 500 / mapSize;
+    cx2d.fillRect(appleCoord[0] * pixelSize, appleCoord[1] * pixelSize, pixelSize, pixelSize);
+
+    //head
+    let minipixel = pixelSize / 3;
+    cx2d.fillStyle = "#00ff00";
+    cx2d.fillRect(head[0] * pixelSize, head[1] * pixelSize, pixelSize, pixelSize);
+
+    let xmod = 0;
+    let ymod = 0;
+    switch (dir) {
+        case 0:
+            xmod = minipixel * 2;
+            ymod = minipixel;
+            break;
+        case 1:
+            ymod = minipixel;
+            break;
+        case 2:
+            xmod = minipixel;
+            break;
+        case 3:
+            xmod = minipixel;
+            ymod = minipixel * 2;
+    }
+
+    cx2d.fillStyle = "#900000";
+    cx2d.fillRect(head[0] * pixelSize + xmod, head[1] * pixelSize + ymod, minipixel, minipixel);
+
+    let size = tail.length;
+    while (size > 0) {
+        size--;
+        cx2d.fillStyle = "#00aa00";
+        cx2d.fillRect(tail[size][0] * pixelSize, tail[size][1] * pixelSize, pixelSize, pixelSize);
+    }
+}
+window.onload = initGame
+document.addEventListener("keydown", (event) => {
+    switch (event.keyCode) {
+        case 68:
+        case 39:
+            if (lastDir != 1)
+                dir = 0;
+            break;
+        case 65:
+        case 37:
+            if (lastDir != 0)
+                dir = 1;
+            break;
+        case 87:
+        case 38:
+            if (lastDir != 3)
+                dir = 2;
+            break;
+        case 83:
+        case 40:
+            if (lastDir != 2)
+                dir = 3;
+    }
+});
+    </script>
+    <script>
+        var mapSize = 25;
+        var apoints = 2;
+        var moveTick = 3;
+        var ticks = 0;
+        //
+        var lastDir=0;
+        var dir = 0;
+        //0 >
+        //1 <
+        //2 /\
+        //3 \/
+        var appleCoord = [0,0];
+        var tail = [[3,5],[4,5]];
+        var head = [5,5];
+    </script>
+</head>
+<body>
+<h1>snak</h1>
+<h1 id="points">
+        Punkty: 0
+    </h1>
+    <h5>Autoplay</h5>
+	<input type="checkbox" id="apl" onclick="checkb()">
+	<br>
+    <canvas id="game" width="500" height="500"></canvas>
+    
+</body>
+</html>
